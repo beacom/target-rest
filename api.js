@@ -1,12 +1,33 @@
 var express = require('express')
 require('es6-promise').polyfill()
 require('isomorphic-fetch')
+var mongoose = require('mongoose')
+
+mongoose.connect('mongodb://' + process.env.IP + '/pricing')
+var db = mongoose.connection
+db.on('error', console.error.bind(console, 'connection error:'))
+mongoose.connection.on('disconnected', function () {
+    console.log("MongoDB disconnected, attempting reconnection");
+    db.connect()
+    })
+db.once('open', function() {
+    console.log('sucessful connection to MongoDB')
+})
+
+var pricingSchema = mongoose.Schema({
+    id: Number,
+    value: Number,
+    currency_code: {type: String, default: 'USD'}
+})
+var Pricing = mongoose.model('Pricing', pricingSchema);
 
 var app = express()
 
 app.get('/api-v1/products/:id', function (request, response) {
+    
+    
+    
     var id = request.params['id']
-    var title = "unknown"
     var price = "unknown"
     var config = {
         method: 'GET',
@@ -21,18 +42,20 @@ app.get('/api-v1/products/:id', function (request, response) {
         })
         .then(function(data) {
             console.log(data.product.item.product_description.title)
-            title = data.product.item.product_description.title;
+            var title = data.product.item.product_description.title;
             
-            response.send(
+            Pricing.findOne({ id: id }, function (error, pricingData) {
+                if (error) {
+                    return console.error(error);
+                }
+                console.log('pricingData : ' + pricingData);
+                response.send(
                 {
                     "id":id,
                     "name":title,
-                    "current_price":
-                        {
-                            "value": price,
-                            "currency_code":"USD"
-                        }
+                    "current_price": pricingData
                 })
+            })
         })
     
     
