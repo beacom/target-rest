@@ -2,6 +2,7 @@ var express = require('express')
 require('es6-promise').polyfill()
 require('isomorphic-fetch')
 var mongoose = require('mongoose')
+var bodyParser = require('body-parser')
 
 mongoose.connect('mongodb://' + process.env.IP + '/pricing')
 var db = mongoose.connection
@@ -21,14 +22,12 @@ var pricingSchema = mongoose.Schema({
 })
 var Pricing = mongoose.model('Pricing', pricingSchema);
 
+var jsonParser = bodyParser.json()
+
 var app = express()
 
 app.get('/api-v1/products/:id', function (request, response) {
-    
-    
-    
     var id = request.params['id']
-    var price = "unknown"
     var config = {
         method: 'GET',
         headers: { 'Content-Type':'application/json' }
@@ -46,19 +45,40 @@ app.get('/api-v1/products/:id', function (request, response) {
             
             Pricing.findOne({ id: id }, function (error, pricingData) {
                 if (error) {
-                    return console.error(error);
+                    return response.sendStatus(500)
                 }
                 console.log('pricingData : ' + pricingData);
-                response.send(
-                {
-                    "id":id,
-                    "name":title,
-                    "current_price": pricingData
-                })
+                if(pricingData != null) {
+                    response.send(
+                    {
+                        "id": id,
+                        "name": title,
+                        "current_price": {
+                            "id": pricingData.id,
+                            "value": pricingData.value,
+                            "currency_code": pricingData.currency_code
+                        }
+                    })
+                } else {
+                    response.sendStatus(404)
+                }
             })
         })
-    
-    
+})
+
+app.put('/api-v1/products/:id', jsonParser, function (request, response) {
+    console.log(request.body)
+    var newData = { 
+        id : request.body.id,
+        value: request.body.current_price.value,
+        currency_code: request.body.current_price.currency_code
+    }
+    Pricing.findOneAndUpdate({id: request.body.id}, newData, {upsert:true}, function(error, newDocument){
+        if (error) {
+            return response.send(500, { error: error })
+        }
+        response.send(newDocument) // could be changed to output content similar to GET endpoint
+    })
 })
 
 app.listen(process.env.PORT, function () {
