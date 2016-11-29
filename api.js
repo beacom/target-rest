@@ -32,7 +32,7 @@ app.get('/api-v1/products/:id', function (request, response) {
         method: 'GET',
         headers: { 'Content-Type':'application/json' }
     };
-    fetch('http://redsky.target.com/v1/pdp/tcin/13860428?excludes=taxonomy,price,promotion,bulk_ship,rating_and_review_reviews,rating_and_review_statistics,question_answer_statistics', config)
+    fetch('http://redsky.target.com/v1/pdp/tcin/' + id + '?excludes=taxonomy,price,promotion,bulk_ship,rating_and_review_reviews,rating_and_review_statistics,question_answer_statistics', config)
         .then(function(response) {
             if (response.status >= 400) {
                 throw new Error("Bad response from server");
@@ -48,20 +48,24 @@ app.get('/api-v1/products/:id', function (request, response) {
                     return response.sendStatus(500)
                 }
                 console.log('pricingData : ' + pricingData);
+                currentPrice = {
+                            "value": "unknown",
+                            "currency_code": "unknown"
+                }
                 if(pricingData != null) {
-                    response.send(
-                    {
-                        "id": id,
-                        "name": title,
-                        "current_price": {
-                            "id": pricingData.id,
+                    var currentPrice = {
                             "value": pricingData.value,
                             "currency_code": pricingData.currency_code
                         }
-                    })
-                } else {
-                    response.sendStatus(404)
                 }
+                
+                response.send(
+                    {
+                        "id": id,
+                        "name": title,
+                        "current_price": currentPrice
+                    })
+                
             })
         })
 })
