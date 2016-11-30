@@ -35,9 +35,11 @@ app.get('/api-v1/products/:id', function (request, response) {
     fetch('http://redsky.target.com/v1/pdp/tcin/' + id + '?excludes=taxonomy,price,promotion,bulk_ship,rating_and_review_reviews,rating_and_review_statistics,question_answer_statistics', config)
         .then(function(response) {
             if (response.status >= 400) {
-                throw new Error("Bad response from server");
+                console.log("Unable to obtain item data from RedSky")
+                return { product: { item: { product_description: { title: "unknown" }}}}
+            } else {
+                return response.json()
             }
-            return response.json();
         })
         .then(function(data) {
             console.log(data.product.item.product_description.title)
@@ -47,7 +49,6 @@ app.get('/api-v1/products/:id', function (request, response) {
                 if (error) {
                     return response.sendStatus(500)
                 }
-                console.log('pricingData : ' + pricingData);
                 currentPrice = {
                             "value": "unknown",
                             "currency_code": "unknown"
@@ -72,6 +73,10 @@ app.get('/api-v1/products/:id', function (request, response) {
 
 app.put('/api-v1/products/:id', jsonParser, function (request, response) {
     console.log(request.body)
+    if(request.params['id'] != request.body.id) {
+        console.error("mismatched JSON body and parameter id values")
+        return response.sendStatus(500)
+    }
     var newData = { 
         id : request.body.id,
         value: request.body.current_price.value,
@@ -79,9 +84,10 @@ app.put('/api-v1/products/:id', jsonParser, function (request, response) {
     }
     Pricing.findOneAndUpdate({id: request.body.id}, newData, {upsert:true}, function(error, newDocument){
         if (error) {
+            console.error("failure updating pricing info : " + request.body.id)
             return response.send(500, { error: error })
         }
-        response.send(newDocument) // could be changed to output content similar to GET endpoint
+        response.send(newData) // return just the subset of data this endpoint can alter
     })
 })
 
