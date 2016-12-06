@@ -3,10 +3,6 @@ Target Case Study Web Service
 
 The service uses isomorphic-fetch to make GET requests to the Target web service. It connects to a MongoDB insance where a collection of pricing information is managed. The PUT endpoint is implemented as an upsert, so pricing data can be easily added to the system.
 
-## Hosted API
-
-Both the GET & PUT endpoints are running in a Cloud9 virtual machine. Occassionally MongoDB will flake out when left running in a Cloud9 development environment for a days at a time, but this should be good for a couple of days from November 29, 2016. Feel free to send an email to peter.beacom@gmail.com and I will grant access to the Cloud9 workspace as well.
-
 ### GET  https://target-rest-beacom.c9users.io:8080/api-v1/products/[id]
 
 GET /api-v1/products/13860428 HTTP/1.1
