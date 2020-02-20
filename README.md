@@ -1,7 +1,7 @@
 # target-rest
 Target Case Study Web Service
 
-The service uses isomorphic-fetch to make GET requests to the Target web service. It connects to a MongoDB insance where a collection of pricing information is managed. The PUT endpoint is implemented as an upsert, so pricing data can be easily added to the system.
+The service uses isomorphic-fetch to make GET requests to a Target Corp web service. It connects to a MongoDB insance where a collection of pricing information is managed. The PUT endpoint is implemented as an upsert, so pricing data can be easily added to the system. This was implemented as part of a job interview and is left here for historical purposes.
 
 ### GET  https://target-rest-beacom.c9users.io:8080/api-v1/products/[id]
 
